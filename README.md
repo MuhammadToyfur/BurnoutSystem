@@ -1,3 +1,4 @@
+<<<<<<< HEAD
 # 🧠 BurnoutCheck — Sistem Pakar Burnout Mahasiswa
 
 **Sistem Berbasis Pengetahuan (SBP)** untuk mendiagnosis risiko burnout mahasiswa menggunakan metode **Forward Chaining Rule-Based System** dengan 10 variabel psikologis dan 13+ aturan IF-THEN.
@@ -176,3 +177,6 @@ routes/web.php
 ---
 
 *Sistem Pakar Burnout Mahasiswa · Berbasis SBP Forward Chaining*
+=======
+# BurnoutSystem
+>>>>>>> 1884485872bf1cd7b49c53bb0a5e0df70fedd5c4
