@@ -15,9 +15,6 @@ class DatabaseSeeder extends Seeder
      */
     public function run(): void
     {
-        // Panggil seeder tambahan
-        $this->call(ArticlePencegahanSeeder::class);
-
         // Admin user
         User::updateOrCreate(
             ['email' => 'admin@burnout.ac.id'],
@@ -42,170 +39,93 @@ class DatabaseSeeder extends Seeder
         );
 
         $rules = [
-            // ===== RISIKO TINGGI =====
+            // ===== RISIKO TINGGI (High) =====
             [
                 'rule_code' => 'R01',
-                'kondisi' => 'Beban tugas sangat tinggi DAN kualitas tidur sangat buruk DAN motivasi sangat rendah',
+                'kondisi' => 'Tingkat stres tinggi DAN skor depresi tinggi DAN skor kecemasan tinggi',
                 'kondisi_json' => [
-                    ['variabel' => 'beban_tugas', 'operator' => '>=', 'nilai' => 4],
-                    ['variabel' => 'tidur', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'motivasi', 'operator' => '<=', 'nilai' => 2],
+                    ['variabel' => 'stress_level', 'operator' => '==', 'nilai' => 'High'],
+                    ['variabel' => 'depression_score', 'operator' => '>=', 'nilai' => 8],
+                    ['variabel' => 'anxiety_score', 'operator' => '>=', 'nilai' => 8],
                 ],
-                'hasil_risiko' => 'Tinggi',
+                'hasil_risiko' => 'High',
                 'certainty_factor' => 0.95,
-                'rekomendasi' => 'Kondisi Anda sangat mengkhawatirkan. Segera konsultasikan dengan konselor atau psikolog kampus. Prioritaskan istirahat, kurangi beban tugas secara bertahap, dan cari dukungan dari keluarga atau teman dekat.',
+                'rekomendasi' => 'Kondisi Anda sangat mengkhawatirkan dengan tingkat depresi dan cemas yang tinggi. Segera konsultasikan dengan konselor atau psikolog.',
                 'bobot' => 10,
             ],
             [
                 'rule_code' => 'R02',
-                'kondisi' => 'Kelelahan emosi tinggi DAN depersonalisasi tinggi DAN prestasi akademik sangat rendah',
+                'kondisi' => 'Kualitas tidur buruk DAN tekanan akademik sangat tinggi',
                 'kondisi_json' => [
-                    ['variabel' => 'emosi', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'sosial', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'prestasi', 'operator' => '<=', 'nilai' => 2],
+                    ['variabel' => 'sleep_quality', 'operator' => '==', 'nilai' => 'Poor'],
+                    ['variabel' => 'academic_pressure_score', 'operator' => '>=', 'nilai' => 8],
                 ],
-                'hasil_risiko' => 'Tinggi',
-                'certainty_factor' => 0.92,
-                'rekomendasi' => 'Tanda-tanda burnout berat terdeteksi. Anda perlu segera mendapat bantuan profesional. Cuti akademik bisa menjadi pilihan untuk pemulihan. Jangan menanggung beban ini sendiri.',
-                'bobot' => 10,
+                'hasil_risiko' => 'High',
+                'certainty_factor' => 0.88,
+                'rekomendasi' => 'Kurang tidur drastis akibat tekanan akademik dapat memicu burnout berat. Kurangi beban dan prioritas istirahat.',
+                'bobot' => 9,
             ],
             [
                 'rule_code' => 'R03',
-                'kondisi' => 'Lima atau lebih variabel berada pada level kritis (≤2)',
+                'kondisi' => 'Stres level tinggi DAN dukungan sosial rendah',
                 'kondisi_json' => [
-                    ['tipe' => 'count_critical', 'threshold' => 5, 'level' => 2],
+                    ['variabel' => 'stress_level', 'operator' => '==', 'nilai' => 'High'],
+                    ['variabel' => 'social_support_score', 'operator' => '<=', 'nilai' => 3],
                 ],
-                'hasil_risiko' => 'Tinggi',
-                'certainty_factor' => 0.88,
-                'rekomendasi' => 'Multiple dimensi burnout terdeteksi secara bersamaan. Ini merupakan kondisi burnout komprehensif yang membutuhkan intervensi segera dari tenaga profesional kesehatan mental.',
+                'hasil_risiko' => 'High',
+                'certainty_factor' => 0.90,
+                'rekomendasi' => 'Anda mengalami stres tinggi tanpa adanya dukungan sosial yang cukup. Cobalah mencari lingkungan sosial yang positif.',
                 'bobot' => 9,
             ],
+            // ===== RISIKO SEDANG (Medium) =====
             [
                 'rule_code' => 'R04',
-                'kondisi' => 'Beban tugas ekstrem DAN tekanan keuangan tinggi DAN kecemasan masa depan tinggi',
+                'kondisi' => 'Tekanan akademik tinggi secara moderat DAN stres level medium',
                 'kondisi_json' => [
-                    ['variabel' => 'beban_tugas', 'operator' => '>=', 'nilai' => 5],
-                    ['variabel' => 'keuangan', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'masa_depan', 'operator' => '<=', 'nilai' => 2],
+                    ['variabel' => 'academic_pressure_score', 'operator' => '>=', 'nilai' => 5],
+                    ['variabel' => 'stress_level', 'operator' => '==', 'nilai' => 'Medium'],
                 ],
-                'hasil_risiko' => 'Tinggi',
-                'certainty_factor' => 0.85,
-                'rekomendasi' => 'Tekanan multi-dimensi (akademik, keuangan, dan kecemasan masa depan) menyebabkan burnout serius. Pertimbangkan untuk mencari beasiswa, bimbingan karir, dan dukungan psikologis segera.',
-                'bobot' => 9,
+                'hasil_risiko' => 'Medium',
+                'certainty_factor' => 0.70,
+                'rekomendasi' => 'Anda berisiko burnout sedang akibat beban yang mulai berat. Sesuaikan manajemen waktu dan luangkan waktu untuk relaksasi.',
+                'bobot' => 6,
             ],
             [
                 'rule_code' => 'R05',
-                'kondisi' => 'Kondisi fisik sangat buruk DAN kualitas tidur sangat buruk DAN emosi tidak stabil',
+                'kondisi' => 'Keuangan bermasalah DAN kualitas tidur rata-rata',
                 'kondisi_json' => [
-                    ['variabel' => 'fisik', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'tidur', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'emosi', 'operator' => '<=', 'nilai' => 2],
+                    ['variabel' => 'financial_stress_score', 'operator' => '>=', 'nilai' => 6],
+                    ['variabel' => 'sleep_quality', 'operator' => '==', 'nilai' => 'Average'],
                 ],
-                'hasil_risiko' => 'Tinggi',
-                'certainty_factor' => 0.90,
-                'rekomendasi' => 'Burnout fisik and emosional yang berat. Segera periksakan ke dokter dan konselor. Istirahat total sementara waktu sangat diperlukan untuk pemulihan.',
-                'bobot' => 9,
+                'hasil_risiko' => 'Medium',
+                'certainty_factor' => 0.60,
+                'rekomendasi' => 'Tekanan keuangan perlahan memengaruhi pola Anda. Pertimbangkan mencari sumber dukungan finansial atau beasiswa.',
+                'bobot' => 5,
             ],
- 
-            // ===== RISIKO SEDANG =====
+            // ===== RISIKO RENDAH (Low) =====
             [
                 'rule_code' => 'R06',
-                'kondisi' => 'Beban tugas tinggi DAN manajemen waktu buruk DAN motivasi rendah',
+                'kondisi' => 'Kualitas tidur baik DAN dukungan sosial tinggi',
                 'kondisi_json' => [
-                    ['variabel' => 'beban_tugas', 'operator' => '>=', 'nilai' => 4],
-                    ['variabel' => 'waktu', 'operator' => '<=', 'nilai' => 2],
-                    ['variabel' => 'motivasi', 'operator' => '<=', 'nilai' => 3],
+                    ['variabel' => 'sleep_quality', 'operator' => '==', 'nilai' => 'Good'],
+                    ['variabel' => 'social_support_score', 'operator' => '>=', 'nilai' => 7],
                 ],
-                'hasil_risiko' => 'Sedang',
-                'certainty_factor' => 0.65,
-                'rekomendasi' => 'Anda berisiko burnout sedang. Perbaiki manajemen waktu dengan teknik Pomodoro atau time-blocking. Bagi tugas besar menjadi bagian kecil. Temukan kembali motivasi intrinsik Anda.',
-                'bobot' => 6,
+                'hasil_risiko' => 'Low',
+                'certainty_factor' => 0.85,
+                'rekomendasi' => 'Anda memiliki kualitas dukungan yang baik dan rutinitas tidur yang sehat. Pertahankan kebiasaan ini!',
+                'bobot' => 2,
             ],
             [
                 'rule_code' => 'R07',
-                'kondisi' => 'Kualitas tidur buruk DAN kondisi fisik kurang baik DAN prestasi kurang memuaskan',
+                'kondisi' => 'Stres level rendah DAN skor depresi sangat rendah',
                 'kondisi_json' => [
-                    ['variabel' => 'tidur', 'operator' => '<=', 'nilai' => 3],
-                    ['variabel' => 'fisik', 'operator' => '<=', 'nilai' => 3],
-                    ['variabel' => 'prestasi', 'operator' => '<=', 'nilai' => 3],
+                    ['variabel' => 'stress_level', 'operator' => '==', 'nilai' => 'Low'],
+                    ['variabel' => 'depression_score', 'operator' => '<=', 'nilai' => 2],
                 ],
-                'hasil_risiko' => 'Sedang',
-                'certainty_factor' => 0.60,
-                'rekomendasi' => 'Pola tidur dan kondisi fisik memengaruhi prestasi akademik. Targetkan 7-8 jam tidur per malam, olahraga ringan 30 menit/hari, dan atur pola makan bergizi.',
-                'bobot' => 6,
-            ],
-            [
-                'rule_code' => 'R08',
-                'kondisi' => 'Dukungan sosial rendah DAN emosi kurang stabil DAN kecemasan masa depan tinggi',
-                'kondisi_json' => [
-                    ['variabel' => 'sosial', 'operator' => '<=', 'nilai' => 3],
-                    ['variabel' => 'emosi', 'operator' => '<=', 'nilai' => 3],
-                    ['variabel' => 'masa_depan', 'operator' => '<=', 'nilai' => 3],
-                ],
-                'hasil_risiko' => 'Sedang',
-                'certainty_factor' => 0.55,
-                'rekomendasi' => 'Isolasi sosial dan kecemasan dapat memperburuk burnout. Bergabunglah dengan komunitas kampus, ikuti kegiatan ekstrakurikuler, dan pertimbangkan konseling untuk mengatasi kecemasan.',
-                'bobot' => 6,
-            ],
-            [
-                'rule_code' => 'R09',
-                'kondisi' => 'Tiga atau empat variabel berada pada level kurang baik (≤3)',
-                'kondisi_json' => [
-                    ['tipe' => 'count_critical', 'threshold' => 3, 'level' => 3, 'max' => 4],
-                ],
-                'hasil_risiko' => 'Sedang',
-                'certainty_factor' => 0.50,
-                'rekomendasi' => 'Beberapa aspek kehidupan akademik Anda perlu perhatian. Identifikasi area yang paling mengganggu dan fokus perbaiki satu per satu. Diskusikan dengan dosen pembimbing akademik.',
-                'bobot' => 5,
-            ],
-            [
-                'rule_code' => 'R10',
-                'kondisi' => 'Tekanan keuangan cukup tinggi DAN manajemen waktu kurang baik',
-                'kondisi_json' => [
-                    ['variabel' => 'keuangan', 'operator' => '<=', 'nilai' => 3],
-                    ['variabel' => 'waktu', 'operator' => '<=', 'nilai' => 3],
-                ],
-                'hasil_risiko' => 'Sedang',
-                'certainty_factor' => 0.45,
-                'rekomendasi' => 'Tekanan keuangan dan waktu bisa memicu burnout. Cari informasi beasiswa, part-time yang fleksibel, dan gunakan aplikasi manajemen waktu untuk mengatur prioritas.',
-                'bobot' => 5,
-            ],
- 
-            // ===== RISIKO RENDAH =====
-            [
-                'rule_code' => 'R11',
-                'kondisi' => 'Semua variabel berada pada level baik hingga sangat baik (≥4)',
-                'kondisi_json' => [
-                    ['tipe' => 'all_good', 'level' => 4],
-                ],
-                'hasil_risiko' => 'Rendah',
+                'hasil_risiko' => 'Low',
                 'certainty_factor' => 0.95,
-                'rekomendasi' => 'Kondisi Anda sangat baik! Pertahankan gaya hidup sehat ini. Tetap jaga keseimbangan antara studi, istirahat, dan kehidupan sosial. Jadilah inspirasi bagi teman-teman sekitar Anda.',
+                'rekomendasi' => 'Kondisi Anda sangat baik. Tetap jaga keseimbangan kehidupan akademik dan sosial.',
                 'bobot' => 1,
-            ],
-            [
-                'rule_code' => 'R12',
-                'kondisi' => 'Tidak lebih dari dua variabel pada level cukup, sisanya baik',
-                'kondisi_json' => [
-                    ['tipe' => 'count_critical', 'threshold' => 0, 'level' => 3, 'max' => 2],
-                ],
-                'hasil_risiko' => 'Rendah',
-                'certainty_factor' => 0.85,
-                'rekomendasi' => 'Risiko burnout Anda rendah. Ada beberapa area kecil yang bisa ditingkatkan, namun secara keseluruhan kondisi Anda cukup sehat. Tetap waspada dan lakukan self-check secara berkala.',
-                'bobot' => 2,
-            ],
-            [
-                'rule_code' => 'R13',
-                'kondisi' => 'Motivasi tinggi DAN dukungan sosial baik DAN manajemen waktu baik',
-                'kondisi_json' => [
-                    ['variabel' => 'motivasi', 'operator' => '>=', 'nilai' => 4],
-                    ['variabel' => 'sosial', 'operator' => '>=', 'nilai' => 4],
-                    ['variabel' => 'waktu', 'operator' => '>=', 'nilai' => 4],
-                ],
-                'hasil_risiko' => 'Rendah',
-                'certainty_factor' => 0.80,
-                'rekomendasi' => 'Tiga pilar penting (motivasi, sosial, dan waktu) Anda sangat baik. Ini adalah fondasi kuat untuk menghindari burnout. Terus kembangkan skill dan jaringan pertemanan Anda.',
-                'bobot' => 2,
             ],
         ];
 
@@ -256,5 +176,8 @@ class DatabaseSeeder extends Seeder
                 $article
             );
         }
+
+        // Panggil seeder tambahan
+        $this->call(ArticlePencegahanSeeder::class);
     }
 }

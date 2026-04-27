@@ -68,36 +68,43 @@
                 <div class="flex-1">
                     <div class="d-flex align-items-start justify-content-between gap-2 mb-1">
                         <div>
-                            <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:
-                                @if($config['dimensi']==='kelelahan') #ef4444
-                                @elseif($config['dimensi']==='depersonalisasi') #f59e0b
-                                @else #10b981
-                                @endif">
-                                {{ ucfirst($config['dimensi']) }}
+                            <span style="font-size:0.7rem;font-weight:700;text-transform:uppercase;letter-spacing:0.05em;color:#4f46e5">
+                                {{ strtoupper($config['tipe']) }}
                             </span>
                             <h6 style="font-weight:700;color:#1e293b;margin:4px 0 0;font-size:0.95rem">
                                 {{ $config['label'] }}
                             </h6>
                         </div>
                     </div>
-                    <p style="font-size:0.85rem;color:#64748b;margin-bottom:16px">{{ $config['pertanyaan'] }}</p>
+                    <p style="font-size:0.85rem;color:#64748b;margin-bottom:16px">Tentukan form sesuai dengan aktivitas atau rekaman terbaru.</p>
 
-                    {{-- Radio options --}}
-                    <div class="options-grid">
-                        @foreach($config['opsi'] as $nilai => $label)
-                        <label class="option-label" for="{{ $key }}_{{ $nilai }}">
-                            <input type="radio" name="{{ $key }}" id="{{ $key }}_{{ $nilai }}"
-                                value="{{ $nilai }}"
-                                {{ old($key) == $nilai ? 'checked' : '' }}
-                                class="option-radio"
-                                data-field="{{ $key }}">
-                            <div class="option-content">
-                                <div class="option-number">{{ $nilai }}</div>
-                                <div class="option-text">{{ $label }}</div>
-                            </div>
-                        </label>
-                        @endforeach
-                    </div>
+                    {{-- Options/Input --}}
+                    @if($config['tipe'] === 'select')
+                        <div class="options-grid">
+                            @foreach($config['opsi'] as $nilai => $label)
+                            <label class="option-label" for="{{ $key }}_{{ $nilai }}">
+                                <input type="radio" name="{{ $key }}" id="{{ $key }}_{{ $nilai }}"
+                                    value="{{ $nilai }}"
+                                    {{ old($key) == $nilai ? 'checked' : '' }}
+                                    class="option-radio input-field"
+                                    data-field="{{ $key }}">
+                                <div class="option-content">
+                                    <div class="option-number" style="width:16px;height:16px"></div>
+                                    <div class="option-text">{{ $label }}</div>
+                                </div>
+                            </label>
+                            @endforeach
+                        </div>
+                    @elseif($config['tipe'] === 'number')
+                        <input type="number" name="{{ $key }}" id="{{ $key }}" 
+                               class="form-control input-field" 
+                               data-field="{{ $key }}"
+                               value="{{ old($key) }}"
+                               @if(isset($config['min'])) min="{{ $config['min'] }}" @endif
+                               @if(isset($config['max'])) max="{{ $config['max'] }}" @endif
+                               @if(isset($config['step'])) step="{{ $config['step'] }}" @endif
+                               placeholder="Masukkan angka...">
+                    @endif
 
                     @error($key)
                     <div style="color:#ef4444;font-size:0.78rem;margin-top:6px">
@@ -193,13 +200,21 @@
 const totalFields = {{ count($variabel) }};
 const answered = new Set();
 
-document.querySelectorAll('.option-radio').forEach(radio => {
-    radio.addEventListener('change', function () {
-        const field = this.dataset.field;
-        const card = document.getElementById('qcard-' + field);
+document.querySelectorAll('.input-field').forEach(field => {
+    field.addEventListener('input', function () {
+        const fieldName = this.dataset.field;
+        const card = document.getElementById('qcard-' + fieldName);
         
-        answered.add(field);
-        card.classList.add('answered');
+        if (this.type === 'radio' && this.checked) {
+            answered.add(fieldName);
+            card.classList.add('answered');
+        } else if (this.type === 'number' && this.value.trim() !== '') {
+            answered.add(fieldName);
+            card.classList.add('answered');
+        } else if (this.type === 'number' && this.value.trim() === '') {
+            answered.delete(fieldName);
+            card.classList.remove('answered');
+        }
 
         // Update progress
         const pct = (answered.size / totalFields) * 100;
@@ -212,13 +227,21 @@ document.querySelectorAll('.option-radio').forEach(radio => {
             btn.disabled = false;
             btn.style.opacity = '1';
             btn.style.cursor = 'pointer';
+        } else {
+            btn.disabled = true;
+            btn.style.opacity = '0.5';
+            btn.style.cursor = 'not-allowed';
         }
     });
 });
 
 // Pre-fill from old values
-document.querySelectorAll('.option-radio:checked').forEach(radio => {
-    radio.dispatchEvent(new Event('change'));
+document.querySelectorAll('.input-field').forEach(field => {
+    if (field.type === 'radio' && field.checked) {
+        field.dispatchEvent(new Event('input'));
+    } else if (field.type === 'number' && field.value) {
+        field.dispatchEvent(new Event('input'));
+    }
 });
 </script>
 @endsection

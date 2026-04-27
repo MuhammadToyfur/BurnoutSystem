@@ -27,15 +27,20 @@ class DiagnosisController extends Controller
     {
         // Validasi input
         $rules = [];
-        foreach (array_keys(BurnoutExpertService::$variabel) as $key) {
-            $rules[$key] = 'required|integer|min:1|max:5';
+        foreach (BurnoutExpertService::$variabel as $key => $config) {
+            if ($config['tipe'] === 'number') {
+                $rule = ['required', 'numeric'];
+                if (isset($config['min'])) $rule[] = 'min:' . $config['min'];
+                if (isset($config['max'])) $rule[] = 'max:' . $config['max'];
+                $rules[$key] = implode('|', $rule);
+            } else {
+                $rules[$key] = 'required|string';
+            }
         }
 
         $request->validate($rules, [
-            '*.required' => 'Semua pertanyaan wajib dijawab.',
-            '*.integer' => 'Jawaban harus berupa angka.',
-            '*.min' => 'Nilai minimal adalah 1.',
-            '*.max' => 'Nilai maksimal adalah 5.',
+            '*.required' => 'Semua kolom wajib diisi.',
+            '*.numeric' => 'Kolom harus berupa angka.',
         ]);
 
         $jawaban = $request->only(array_keys(BurnoutExpertService::$variabel));
