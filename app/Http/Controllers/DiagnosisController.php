@@ -70,7 +70,8 @@ class DiagnosisController extends Controller
         }
 
         $variabel = BurnoutExpertService::$variabel;
-        $detailSkor = $this->buildDetailSkor($session->jawaban, $variabel);
+        $jawaban = $session->only(array_keys($variabel));
+        $detailSkor = $this->buildDetailSkor($jawaban, $variabel);
 
         return view('diagnosis.hasil', compact('session', 'variabel', 'detailSkor'));
     }
@@ -98,7 +99,8 @@ class DiagnosisController extends Controller
         }
 
         $variabel = BurnoutExpertService::$variabel;
-        $detailSkor = $this->buildDetailSkor($session->jawaban, $variabel);
+        $jawaban = $session->only(array_keys($variabel));
+        $detailSkor = $this->buildDetailSkor($jawaban, $variabel);
 
         $pdf = Pdf::loadView('diagnosis.pdf', compact('session', 'variabel', 'detailSkor'));
         $pdf->setPaper('A4', 'portrait');
@@ -110,18 +112,31 @@ class DiagnosisController extends Controller
     {
         $detail = [];
         foreach ($variabel as $key => $config) {
-            $nilai = $jawaban[$key] ?? 3;
+            $nilai = $jawaban[$key] ?? '-';
+            $opsiLabel = '-';
+            
+            if ($config['tipe'] === 'select' && isset($config['opsi'][$nilai])) {
+                $opsiLabel = $config['opsi'][$nilai];
+            } else {
+                $opsiLabel = is_numeric($nilai) ? round((float)$nilai, 2) : $nilai;
+            }
+
+            $persentase = 50;
+            if ($config['tipe'] === 'number' && is_numeric($nilai)) {
+                $min = $config['min'] ?? 0;
+                $max = $config['max'] ?? 100;
+                if ($max > $min) {
+                    $persentase = (($nilai - $min) / ($max - $min)) * 100;
+                }
+            }
+
             $detail[$key] = [
                 'label' => $config['label'],
                 'nilai' => $nilai,
-                'opsi_label' => $config['opsi'][$nilai] ?? '-',
-                'persentase' => ($nilai / 5) * 100,
-                'status' => match(true) {
-                    $nilai >= 4 => 'baik',
-                    $nilai == 3 => 'cukup',
-                    default => 'perlu_perhatian',
-                },
-                'dimensi' => $config['dimensi'],
+                'opsi_label' => $opsiLabel,
+                'persentase' => max(0, min(100, $persentase)),
+                'status' => 'cukup',
+                'dimensi' => $config['dimensi'] ?? '-',
             ];
         }
         return $detail;

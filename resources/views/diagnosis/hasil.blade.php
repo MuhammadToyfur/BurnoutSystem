@@ -100,7 +100,7 @@
                                 {{ $detail['label'] }}
                             </span>
                             <div class="d-flex align-items-center gap-2 flex-shrink-0">
-                                <span style="font-size:0.75rem;font-weight:700;color:#1e293b">{{ $detail['nilai'] }}/5</span>
+                                <span style="font-size:0.75rem;font-weight:700;color:#1e293b">{{ is_numeric($detail['nilai']) ? round((float)$detail['nilai'], 2) : $detail['nilai'] }}</span>
                                 @if($detail['status'] === 'baik')
                                     <span style="font-size:0.65rem;background:#dcfce7;color:#16a34a;padding:2px 6px;border-radius:10px;font-weight:600">Baik</span>
                                 @elseif($detail['status'] === 'cukup')

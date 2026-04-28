@@ -19,9 +19,9 @@
 {{-- Stats --}}
 <div class="row g-4 mb-4">
     @php
-        $totalR = $riwayat->where('kategori_risiko','Rendah')->count();
-        $totalS = $riwayat->where('kategori_risiko','Sedang')->count();
-        $totalT = $riwayat->where('kategori_risiko','Tinggi')->count();
+        $totalR = $riwayat->whereIn('burnout_level', ['Low', 'Rendah'])->count();
+        $totalS = $riwayat->whereIn('burnout_level', ['Medium', 'Sedang'])->count();
+        $totalT = $riwayat->whereIn('burnout_level', ['High', 'Tinggi'])->count();
         $rataRata = $riwayat->count() > 0 ? round($riwayat->avg('total_skor'), 1) : 0;
     @endphp
     @foreach([
@@ -56,32 +56,18 @@
     <div class="card-body p-0">
         @forelse($riwayat as $item)
         <div class="d-flex align-items-center gap-3 p-3 {{ !$loop->last ? 'border-bottom' : '' }} history-row">
-            <div style="width:44px;height:44px;border-radius:12px;background:{{ $item->kategori_risiko==='Rendah'?'#dcfce7':($item->kategori_risiko==='Sedang'?'#fef3c7':'#fee2e2') }};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">
-                {{ $item->kategori_risiko==='Rendah'?'✅':($item->kategori_risiko==='Sedang'?'⚡':'⚠️') }}
+            <div style="width:44px;height:44px;border-radius:12px;background:{{ in_array($item->burnout_level, ['Low', 'Rendah'])?'#dcfce7':(in_array($item->burnout_level, ['Medium', 'Sedang'])?'#fef3c7':'#fee2e2') }};display:flex;align-items:center;justify-content:center;font-size:1.2rem;flex-shrink:0">
+                {{ in_array($item->burnout_level, ['Low', 'Rendah'])?'✅':(in_array($item->burnout_level, ['Medium', 'Sedang'])?'⚡':'⚠️') }}
             </div>
             <div class="flex-1" style="min-width:0">
                 <div class="d-flex align-items-center gap-2 flex-wrap mb-1">
                     <span style="font-weight:700;font-size:0.9rem;color:#1e293b">Skor: {{ $item->total_skor }}/100</span>
-                    <span class="badge-risiko badge-{{ strtolower($item->kategori_risiko) }}">{{ $item->kategori_risiko }}</span>
+                    <span class="badge-risiko badge-{{ strtolower($item->burnout_level ?? 'medium') }}">{{ $item->burnout_level }}</span>
                     @if($item->rule_terpilih)
                     <span style="font-size:0.7rem;background:#f1f5f9;color:#475569;padding:2px 7px;border-radius:6px">{{ $item->rule_terpilih }}</span>
                     @endif
                 </div>
                 <div style="font-size:0.78rem;color:#94a3b8">{{ $item->created_at->format('l, d F Y — H:i') }} WIB</div>
-            </div>
-            <div class="d-none d-md-flex gap-2 flex-shrink-0">
-                <div style="text-align:center">
-                    <div style="font-size:0.72rem;color:#94a3b8">Kelelahan</div>
-                    <div style="font-size:0.82rem;font-weight:700;color:#ef4444">{{ $item->skor_kelelahan }}%</div>
-                </div>
-                <div style="text-align:center;margin:0 8px">
-                    <div style="font-size:0.72rem;color:#94a3b8">Depersonal.</div>
-                    <div style="font-size:0.82rem;font-weight:700;color:#f59e0b">{{ $item->skor_depersonalisasi }}%</div>
-                </div>
-                <div style="text-align:center">
-                    <div style="font-size:0.72rem;color:#94a3b8">Prestasi</div>
-                    <div style="font-size:0.82rem;font-weight:700;color:#10b981">{{ $item->skor_prestasi }}%</div>
-                </div>
             </div>
             <div class="d-flex gap-1 flex-shrink-0">
                 <a href="{{ route('diagnosis.hasil', $item->id) }}" class="btn btn-sm" style="background:#ede9fe;color:#4f46e5;border-radius:7px;padding:5px 9px;font-size:0.78rem;text-decoration:none;font-weight:600" title="Detail">
@@ -111,6 +97,12 @@
 
 @section('scripts')
 @if($chartData->count() > 1)
+@php
+    $labels = $chartData->values()->map(fn($d, $i) => ["Sesi " . ($i + 1), $d->created_at->format('d M')]);
+    $dataValues = $chartData->values()->map(fn($d) => ($d->cf_hasil > 0 ? $d->cf_hasil : $d->total_skor / 100) * 100);
+    $pointColors = $chartData->values()->map(fn($d) => in_array($d->burnout_level, ['Low', 'Rendah']) ? '#16a34a' : (in_array($d->burnout_level, ['Medium', 'Sedang']) ? '#d97706' : '#dc2626'));
+    $tooltipItems = $chartData->values()->map(fn($d) => ['tgl' => $d->created_at->format('l, d F Y (H:i)'), 'kat' => $d->burnout_level]);
+@endphp
 <script>
 const ctx = document.getElementById('trendChart').getContext('2d');
 
@@ -138,15 +130,15 @@ new Chart(ctx, {
     type: 'line',
     plugins: [bgPlugin],
     data: {
-        labels: @json($chartData->map(fn($d, $i) => ["Sesi " . ($i + 1), $d->created_at->format('d M')])),
+        labels: @json($labels),
         datasets: [{
             label: 'Tingkat Kepastian SBP (%)',
-            data: @json($chartData->map(fn($d) => ($d->cf_hasil > 0 ? $d->cf_hasil : $d->total_skor / 100) * 100)),
+            data: @json($dataValues),
             borderColor: '#4f46e5',
             backgroundColor: 'rgba(79, 70, 229, 0.2)',
             fill: true,
             tension: 0.4,
-            pointBackgroundColor: @json($chartData->map(fn($d) => $d->kategori_risiko==='Rendah'?'#16a34a':($d->kategori_risiko==='Sedang'?'#d97706':'#dc2626'))),
+            pointBackgroundColor: @json($pointColors),
             pointBorderColor: '#fff',
             pointBorderWidth: 2,
             pointRadius: 6,
@@ -190,10 +182,7 @@ new Chart(ctx, {
                         return ' Kepastian: ' + context.raw + '%';
                     },
                     afterLabel: (ctx) => {
-                        const items = @json($chartData->values()->map(fn($d) => [
-                            'tgl' => $d->created_at->format('l, d F Y (H:i)'),
-                            'kat' => $d->kategori_risiko
-                        ]));
+                        const items = @json($tooltipItems);
                         const item = items[ctx.dataIndex];
                         return [
                             ' Waktu: ' + item.tgl,

@@ -115,28 +115,14 @@
     <div class="section-title">Hasil Diagnosis</div>
     <table width="100%">
         <tr>
-            <td width="30%" style="text-align:center;padding-right:16px">
-                <div class="result-box result-{{ strtolower($session->kategori_risiko) }}">
-                    @php $colors = ['Rendah'=>'#16a34a','Sedang'=>'#d97706','Tinggi'=>'#dc2626']; @endphp
-                    <div class="result-score" style="color:{{ $colors[$session->kategori_risiko] }}">{{ number_format($session->cf_hasil * 100, 1) }}%</div>
+            <td width="100%" style="text-align:center;padding-right:16px">
+                <div class="result-box result-{{ strtolower($session->burnout_level ?? 'medium') }}">
+                    @php $colors = ['Rendah'=>'#16a34a','Sedang'=>'#d97706','Tinggi'=>'#dc2626', 'Low'=>'#16a34a','Medium'=>'#d97706','High'=>'#dc2626']; @endphp
+                    <div class="result-score" style="color:{{ $colors[$session->burnout_level ?? 'Medium'] }}">{{ number_format($session->cf_hasil * 100, 1) }}%</div>
                     <div style="font-size:10px;color:#64748b;margin-bottom:4px">Tingkat Kepastian (CF)</div>
-                    <div class="result-label" style="color:{{ $colors[$session->kategori_risiko] }}">
-                        RISIKO {{ strtoupper($session->kategori_risiko) }}
+                    <div class="result-label" style="color:{{ $colors[$session->burnout_level ?? 'Medium'] }}">
+                        RISIKO {{ strtoupper($session->burnout_level ?? 'Medium') }}
                     </div>
-                </div>
-            </td>
-            <td width="70%" style="vertical-align:top">
-                <div style="margin-bottom:8px">
-                    <div class="section-title" style="margin-bottom:10px">Skor Dimensi Burnout</div>
-                    @foreach([['Kelelahan Emosional', $session->skor_kelelahan, '#ef4444'], ['Depersonalisasi', $session->skor_depersonalisasi, '#f59e0b'], ['Kepuasan Prestasi', $session->skor_prestasi, '#10b981']] as [$dim, $skor, $color])
-                    <div class="dimension-row">
-                        <div class="dimension-name">{{ $dim }}</div>
-                        <div class="dimension-bar-bg">
-                            <div class="dimension-bar" style="width:{{ $skor }}%;background:{{ $color }}"></div>
-                        </div>
-                        <div class="dimension-score">{{ $skor }}%</div>
-                    </div>
-                    @endforeach
                 </div>
             </td>
         </tr>
@@ -187,13 +173,10 @@
             <tr>
                 <td>{{ $no++ }}</td>
                 <td style="font-weight:600">{{ $detail['label'] }}</td>
-                <td style="color:
-                    @if($detail['dimensi']==='kelelahan') #ef4444
-                    @elseif($detail['dimensi']==='depersonalisasi') #f59e0b
-                    @else #10b981 @endif">
-                    {{ ucfirst($detail['dimensi']) }}
+                <td style="color:#10b981">
+                    INFO
                 </td>
-                <td style="font-weight:700;text-align:center">{{ $detail['nilai'] }}/5</td>
+                <td style="font-weight:700;text-align:center">{{ is_numeric($detail['nilai']) ? round((float)$detail['nilai'], 2) : $detail['nilai'] }}</td>
                 <td style="color:#64748b">{{ $detail['opsi_label'] }}</td>
                 <td>
                     @if($detail['status']==='baik')
@@ -209,7 +192,7 @@
         </tbody>
     </table>
 
-    @if($session->kategori_risiko === 'Tinggi')
+    @if(in_array($session->burnout_level, ['High', 'Tinggi']))
     <div class="risiko-tinggi-box">
         <h4>⚠️ Peringatan: Risiko Burnout Tinggi</h4>
         <p>Hasil diagnosis menunjukkan Anda berada dalam kondisi burnout yang signifikan. 
